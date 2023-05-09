@@ -12,7 +12,7 @@ import {
 	Key,
 	Ref,
 	Props,
-	ReactElement,
+	ReactElementType,
 	ElementType
 } from 'shared/ReactTypes';
 
@@ -22,7 +22,7 @@ const ReactElement = function (
 	key: Key,
 	ref: Ref,
 	props: Props
-): ReactElement {
+): ReactElementType {
 	const element = {
 		$$typeof: REACT_ELEMENT_TYPE,
 		type,
@@ -73,5 +73,32 @@ export const jsx = (type: ElementType, config: any, ...maybeChildren: any) => {
 	return ReactElement(type, key, ref, props);
 };
 
-// jsxDEV 是开发环境的jsx方法，在官方版本中jsxDEV会做一些其他的检查，这里我们直接将它等价于jsx
-export const jsxDEV = jsx;
+// jsxDEV 是开发环境的jsx方法
+export const jsxDEV = (type: ElementType, config: any) => {
+	let key: Key = null;
+	const props: Props = {};
+	let ref: Ref = null;
+
+	// 处理 jsx 的第二个参数 config
+	for (const prop in config) {
+		const val = config[prop];
+		if (prop === 'key') {
+			if (val !== undefined) {
+				// 将它变成字符串
+				key = '' + val;
+			}
+			continue;
+		}
+		if (prop === 'ref') {
+			if (val !== undefined) {
+				ref = val;
+			}
+			continue;
+		}
+		if ({}.hasOwnProperty.call(config, prop)) {
+			props[prop] = val;
+		}
+	}
+
+	return ReactElement(type, key, ref, props);
+};
