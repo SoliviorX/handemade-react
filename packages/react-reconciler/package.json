@@ -4,7 +4,9 @@
 	"description": "React协调器",
 	"module": "index.ts",
 	"dependencies": {
-		"shared": "workspace: *"
+		"shared": "workspace: *",
+		"react-dom": "workspace:*",
+		"react": "workspace:*"
 	},
 	"keywords": [],
 	"author": "",

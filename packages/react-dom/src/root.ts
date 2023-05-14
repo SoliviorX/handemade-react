@@ -3,16 +3,18 @@
  * 1. 返回一个对象，对象中有一个render方法
  */
 
-import { createContainer } from 'react-reconciler/src/fiberReconciler';
+import {
+	createContainer,
+	updateContainer
+} from 'react-reconciler/src/fiberReconciler';
 import { Container } from './hostConfig';
 import { ReactElementType } from 'shared/ReactTypes';
-import { updateContainer } from 'react-reconciler/src/fiberReconciler';
 
 export function createRoot(container: Container) {
 	const root = createContainer(container);
 	return {
 		render(element: ReactElementType) {
-			updateContainer(element, root);
+			return updateContainer(element, root);
 		}
 	};
 }

@@ -14,7 +14,7 @@ let nextEffect: FiberNode | null = null;
 export const commitMutationEffects = (finishedWork: FiberNode) => {
 	nextEffect = finishedWork;
 	while (nextEffect !== null) {
-		// 向下遍历
+		// 1. 向下遍历
 		const child: FiberNode | null = nextEffect.child;
 		if (
 			(nextEffect.subtreeFlags & MutationMask) !== NoFlags &&
@@ -22,7 +22,7 @@ export const commitMutationEffects = (finishedWork: FiberNode) => {
 		) {
 			nextEffect = child;
 		} else {
-			// 向上遍历
+			// 2. 向上遍历
 			up: while (nextEffect !== null) {
 				commitMutationEffectsOnFiber(nextEffect);
 				const sibling: FiberNode | null = nextEffect.sibling;
@@ -68,7 +68,7 @@ const commitPlacement = (finishedWork: FiberNode) => {
 	}
 };
 
-// 获得父级的fiber节点
+// 获得父级节点
 function getHostParent(fiber: FiberNode): Container | null {
 	let parent = fiber.return;
 
@@ -93,7 +93,7 @@ function appendPlacementNodeIntoContainer(
 	hostParent: Container
 ) {
 	if (finishedWork.tag === HostComponent || finishedWork.tag === HostText) {
-		appendChildToContainer(finishedWork.stateNode, hostParent);
+		appendChildToContainer(hostParent, finishedWork.stateNode);
 		return;
 	}
 	const child = finishedWork.child;

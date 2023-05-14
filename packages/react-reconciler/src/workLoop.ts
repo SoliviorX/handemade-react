@@ -73,9 +73,11 @@ function commitRoot(root: FiberRootNode) {
 
 	if (subtreeHasEffect || rootHasEffect) {
 		// beforeMutation
+
 		// mutation placement
 		commitMutationEffects(finishedWork);
-		root.current = finishedWork;
+		root.current = finishedWork; // 将 wip fiber 树赋值给current fiber树
+
 		// layout
 	} else {
 		root.current = finishedWork;
