@@ -24,7 +24,7 @@ export function updateContainer(
 	root: FiberRootNode
 ) {
 	const hostRootFiber = root.current;
-	// 创建 update
+	// 创建 update（这里的element可能是一个组件ReactElement）
 	const update = createUpdate<ReactElementType | null>(element);
 	// 将 update 放入 updateQueue 中
 	enqueueUpdate(

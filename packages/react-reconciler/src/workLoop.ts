@@ -12,7 +12,7 @@ function prepareFreshStack(root: FiberRootNode) {
 export function scheduleUpdateOnFiber(fiber: FiberNode) {
 	// TODO 调度功能
 
-	// 从当前更新的 fiber 一直向上找到 fiberRootNode
+	// 从当前触发更新的 fiber 一直向上找到 fiberRootNode
 	const root = markUpdateFromFiberToRoot(fiber);
 	renderRoot(root);
 }
@@ -38,8 +38,11 @@ function renderRoot(root: FiberRootNode) {
 			workLoop();
 			break;
 		} catch (error) {
-			console.warn('workLoop发生错误', error);
+			if (__DEV__) {
+				console.warn('workLoop发生错误', error);
+			}
 		}
+		workInProgress = null;
 	} while (true);
 }
 
