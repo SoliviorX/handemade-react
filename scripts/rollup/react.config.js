@@ -13,7 +13,7 @@ export default [
 		input: `${pkgPath}/${module}`,
 		output: {
 			file: `${pkgDistPath}/index.js`,
-			name: 'react',
+			name: 'index.js',
 			format: 'umd' // 能兼容CJS和ESM
 		},
 		plugins: [
@@ -37,13 +37,13 @@ export default [
 			// jsx-runtime
 			{
 				file: `${pkgDistPath}/jsx-runtime.js`,
-				name: 'jsx-runtime',
+				name: 'jsx-runtime.js',
 				format: 'umd'
 			},
 			// jsx-dev-runtime
 			{
 				file: `${pkgDistPath}/jsx-dev-runtime.js`,
-				name: 'jsx-dev-runtime',
+				name: 'jsx-dev-runtime.js',
 				format: 'umd'
 			}
 		],

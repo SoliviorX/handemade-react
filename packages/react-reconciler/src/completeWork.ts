@@ -1,4 +1,5 @@
 import {
+	Container,
 	appendInitialChild,
 	createInstance,
 	createTextInstance
@@ -47,7 +48,7 @@ export const completeWork = (wip: FiberNode) => {
 };
 
 // 在 parent 节点下插入 wip 节点
-function appendAllChildren(parent: FiberNode, wip: FiberNode) {
+function appendAllChildren(parent: Container, wip: FiberNode) {
 	let node = wip.child;
 
 	while (node !== null) {
