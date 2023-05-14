@@ -12,3 +12,6 @@ export interface ReactElementType {
 	ref: Ref;
 	__mark: string;
 }
+
+// action 可以是一个值，或一个返回新值的函数
+export type Action<State> = State | ((prevState: State) => State);
