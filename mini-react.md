@@ -204,3 +204,147 @@ react 框架的特点：
 > 目前我们知道的节点类型有：JSX、ReactElement、FiberNode、DOMElement
 
 ### Reconciler 的工作方式
+
+以 **DFS（深度优先遍历）** 的顺序遍历 ReactElement，这意味着：
+
+1. 如果有子节点，遍历子节点
+2. 如果没有子节点，遍历兄弟节点
+
+这是个递归的过程，存在**递、归两个阶段**：
+
+- "递"对应 `beginWork`：对于同一个节点，比较其 ReactElement 与 fiberNode，生成子 fiberNode。并根据比较的结果生成不同标记（插入、删除、移动......）。
+  1. 对于 `mount` 的组件，他会创建新的子 Fiber 节点
+  2. 对于 `update` 的组件，会通过 diff 算法比较新旧两个 fiberNode，将比较的结果生成新 Fiber 节点
+- "归"对应 `completeWork`：
+  1. `update` 时，更新 props
+  2. `mount` 时，为 Fiber 节点生成对应的 DOM 节点；将子孙 DOM 节点插入刚生成的 DOM 节点中，生成一颗 DOM 树；处理 props；生成 effectList，保存有副作用的 fiber
+
+**双缓冲技术**：当所有 ReactElement 比较完后，会生成一棵 fiberNode 树，一共会存在两棵 fiberNode 树：
+
+- `current`：与视图中真实 UI 对应的 fiberNode 树
+- `workInProgress`：触发更新后，正在 reconciler 中计算的 fiberNode 树
+
+## 如何触发更新
+
+### Update 和 UpdateQueue
+
+触发更新的方式有很多：
+
+- `ReactDOM.render`
+- `ReactDOM.createRoot().render()`
+- `this.setState`
+- `this.forceUpdate`
+- `useState`
+- `useReducer`
+
+我们需要实现一套统一的更新机制，兼容上述触发更新的方式，并方便后续扩展（优先级机制...）
+更新机制的组成部分：
+
+- `Update` —— 代表更新的数据结构
+- `UpdateQueue` —— 消费 `Update` 的数据结构
+
+`fiber.UpdateQueue` 中存储了该节点相关的 `Update`（存放在 `UpdateQueue.shared.pending` 中）
+
+> 一个 Fiber 节点通常会存在多个 `Update`，例如多个 `useState` 同时存在等情况
+
+### 接入更新机制
+
+需要考虑的事情：
+
+- 更新可能发生于任意组件，而**更新流程是从根节点递归的**
+- 需要一个**统一的根节点保存通用信息**
+
+`ReactDOM.createRoot(document.getElementById('root'))` 会执行 `createContainer`，做的事情是：
+
+- 创建 `hostRootFiber`
+- 创建 `FiberRootNode`
+- 建立两者之间的联系
+
+它们之间的关系如下：
+![fiberRootNode&hostRootFiber](https://wechatapppro-1252524126.file.myqcloud.com/appjiz2zqrn2142/image/b_u_622f2474a891b_tuQ1ZmhR/lb1kqa1h0lrm.png)
+
+```js
+export function createContainer(container: Container) {
+	// 创建 hostRootFiber
+	const hostRootFiber = new FiberNode(HostRoot, {}, null);
+	// 创建 FiberRootNode（会建立 FiberRootNode 与 hostRootFiber 之间的关系）
+	const root = new FiberRootNode(container, hostRootFiber);
+	hostRootFiber.updateQueue = createUpdateQueue();
+	// 返回 FiberRootNode
+	return root;
+}
+```
+
+后续 `xxx.render(<App />)` 会执行 `updateContainer`，做的事情是：
+
+- 根据组件创建 `update`
+- 将 `update` 添加到 `hostRootFiber.updateQueue` 中
+- 将 `xxx.render(<App />)` 方法接入到调度，后续再接入到递归流程
+
+```js
+export function updateContainer(
+	element: ReactElementType | null,
+	root: FiberRootNode
+) {
+	const hostRootFiber = root.current;
+	// 根据 element 创建 update，element即render()中的入参 <App/>
+	const update = createUpdate<ReactElementType | null>(element);
+	// 将 update 添加到 hostRootFiber.updateQueue 中
+	enqueueUpdate(
+		hostRootFiber.updateQueue as UpdateQueue<ReactElementType | null>,
+		update
+	);
+
+	// 【*关键*】将 render() 方法接入到递归流程
+	scheduleUpdateOnFiber(hostRootFiber);
+
+	// 返回 element
+	return element;
+}
+```
+
+在 `scheduleUpdateOnFiber`方法中，调度功能先跳过，我们需要先找到 `fiberRootNode`，然后执行 `renderRoot(root)` 进入递归流程；在 `renderRoot(root)` 需要先创建一个 `workInProgress Fiber`，再执行 `workLoop()`.
+
+```js
+export function scheduleUpdateOnFiber(fiber: FiberNode) {
+	// TODO 调度功能
+
+	// 对于ReactDOM.createRoot().render() 传入的fiber是hostRootFiber，但是对于setState传入的fiber是classComponent对应的fiber，render阶段是从rootFiber开始向下遍历，此时必须先回到hostRootFiber
+	// 获取 fiberRootNode
+	const root = markUpdateFromFiberToRoot(fiber);
+	renderRoot(root);
+}
+// 从fiber到root，返回 fiberRootNode
+function markUpdateFromFiberToRoot(fiber: FiberNode) {
+	let node = fiber;
+	let parent = node.return;
+	while (parent !== null) {
+		node = parent;
+		parent = node.return;
+	}
+	if (node.tag === HostRoot) {
+		return node.stateNode;
+	}
+	return null;
+}
+function renderRoot(root: FiberRootNode) {
+	// 初始化
+	prepareFreshStack(root);
+
+	// 递归流程
+	do {
+		try {
+			workLoop();
+			break;
+		} catch (e) {
+			console.warn('workLoop发生错误', e);
+			workInProgress = null;
+		}
+	} while (true);
+}
+// 初始化需要创建一个 workInProgress Fiber
+function prepareFreshStack(root: FiberRootNode) {
+	// 创建 workInProgress
+	workInProgress = createWorkInProgress(root.current, {});
+}
+```
