@@ -5,7 +5,7 @@
 	"main": "index.js",
 	"scripts": {
 		"lint": "eslint --ext .js,.ts,.jsx,.tsx --fix --quiet ./packages",
-		"build:dev": "rimraf dist && rollup --bundleConfigAsCjs --config scripts/rollup/react.config.js",
+		"build:dev": "rimraf dist && rollup --bundleConfigAsCjs --config scripts/rollup/dev.config.js",
 		"prepare": "husky install"
 	},
 	"keywords": [],
@@ -35,6 +35,7 @@
 		"typescript": "^5.1.6"
 	},
 	"dependencies": {
+		"@rollup/plugin-alias": "^5.0.0",
 		"@rollup/plugin-replace": "^5.0.2"
 	}
 }

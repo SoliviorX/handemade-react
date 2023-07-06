@@ -63,7 +63,9 @@ const commitPlacement = (finishedWork: FiberNode) => {
 	// 1. 寻找 parent DOM
 	const hostParent = getHostParent(finishedWork);
 	// 2. 寻找 finishedWork 对应的 DOM，并将该DOM append 到父节点中
-	appendPlacementNodeIntoContainer(finishedWork, hostParent);
+	if (hostParent !== null) {
+		appendPlacementNodeIntoContainer(finishedWork, hostParent);
+	}
 };
 
 const commitUpdate = (finishedWork: FiberNode) => {
@@ -74,7 +76,7 @@ const commitChildDeletion = (finishedWork: FiberNode) => {
 	// TODO
 };
 
-function getHostParent(fiber: FiberNode): Container {
+function getHostParent(fiber: FiberNode): Container | null {
 	let parent = fiber.return;
 	while (parent) {
 		const parentTag = parent.tag;
@@ -90,6 +92,7 @@ function getHostParent(fiber: FiberNode): Container {
 	if (__DEV__) {
 		console.warn('未找到 host parent');
 	}
+	return null;
 }
 
 function appendPlacementNodeIntoContainer(
@@ -99,7 +102,7 @@ function appendPlacementNodeIntoContainer(
 	// 插入的节点必须是host节点，不能是组件/函数等类型
 	// 1. 如果插入的节点是 HostComponent 或 HostText，则直接插入
 	if (finishedWork.tag === HostComponent || finishedWork.tag === HostText) {
-		appendChildToContainer(finishedWork.stateNode, hostParent);
+		appendChildToContainer(hostParent, finishedWork.stateNode);
 		return;
 	}
 	// 2. 否则插入其子节点和子节点的sibling节点

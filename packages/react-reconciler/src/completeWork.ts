@@ -1,4 +1,5 @@
 import {
+	Container,
 	appendInitialChild,
 	createInstance,
 	createTextInstance
@@ -58,12 +59,12 @@ export const completeWork = (wip: FiberNode) => {
 	return;
 };
 
-function appendAllChildren(parent: FiberNode, wip: FiberNode) {
+function appendAllChildren(parent: Container, wip: FiberNode) {
 	let node = wip.child;
 	while (node !== null) {
 		// 【***】node必须是原生html标签或者文本才执行插入操作，否则继续往下及对兄弟节点进行递归
 		if (node.tag === HostComponent || node.tag === HostText) {
-			appendInitialChild(parent, node?.child);
+			appendInitialChild(parent, node?.stateNode);
 		} else if (node.child !== null) {
 			// 1. 当有子节点时，继续往下递归
 			node.child.return = node;
