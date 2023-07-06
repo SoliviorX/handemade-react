@@ -348,3 +348,20 @@ function prepareFreshStack(root: FiberRootNode) {
 	workInProgress = createWorkInProgress(root.current, {});
 }
 ```
+
+## 初探 mount 流程
+
+为开发环境增加 `__DEV__` 标识
+
+```
+pnpm i -d -w @rollup/plugin-replace
+```
+
+### beginWork
+
+`beginWork` 做的事情:
+
+1. 通过对比子组件的 `current fiberNode` 和 `ReactElement`，生成 `workInProgress fiberNode`
+2. 标记与结构变化相关的 `flags`：`Placement`、`ChildDeletion` （不会标记 `Update`）
+
+### completeWork
