@@ -15,7 +15,10 @@ function createDOM(VNode) {
   const { type, props } = VNode;
   let dom;
   // 1. 创建元素
-  if (type && VNode.$$typeof === REACT_ELEMENT) {
+  if (typeof type === "function" && VNode.$$typeof === REACT_ELEMENT) {
+    // 判断是否是函数式组件
+    return getDomByFunctionComponent(VNode);
+  } else if (type && VNode.$$typeof === REACT_ELEMENT) {
     dom = document.createElement(type);
   }
   // 2. 处理子元素
@@ -34,6 +37,12 @@ function createDOM(VNode) {
   // 3. 处理属性值
   setPropsForDOM(dom, props);
   return dom;
+}
+function getDomByFunctionComponent(VNode) {
+  let { type, props } = VNode;
+  let renderVNode = type(props); // 函数式组件的type就是一个函数，返回结果是VNode
+  if (!renderVNode) return null;
+  return createDOM(renderVNode);
 }
 function setPropsForDOM(dom, VNodeProps = {}) {
   if (!dom) return;
