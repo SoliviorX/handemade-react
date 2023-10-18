@@ -15,10 +15,18 @@ function createDOM(VNode) {
   const { type, props } = VNode;
   let dom;
   // 1. 创建元素
-  if (typeof type === "function" && VNode.$$typeof === REACT_ELEMENT) {
-    // 判断是否是函数式组件
+  if (
+    typeof type === "function" &&
+    type.IS_CLASS_COMPONENT &&
+    VNode.$$typeof === REACT_ELEMENT
+  ) {
+    // 1.1 如果是类组件
+    return getDomByClassComponent(VNode);
+  } else if (typeof type === "function" && VNode.$$typeof === REACT_ELEMENT) {
+    // 1.2 如果是函数式组件
     return getDomByFunctionComponent(VNode);
   } else if (type && VNode.$$typeof === REACT_ELEMENT) {
+    // 1.3 如果是一般的jsx
     dom = document.createElement(type);
   }
   // 2. 处理子元素
@@ -38,9 +46,18 @@ function createDOM(VNode) {
   setPropsForDOM(dom, props);
   return dom;
 }
+function getDomByClassComponent(VNode) {
+  let { type, props } = VNode;
+  // 类组件转化成VNode后的type就是class，创建类组件的实例
+  let instance = new type(props);
+  // 手动执行组件实例的render函数
+  let renderVNode = instance.render();
+  if (!renderVNode) return null;
+  return createDOM(renderVNode);
+}
 function getDomByFunctionComponent(VNode) {
   let { type, props } = VNode;
-  let renderVNode = type(props); // 函数式组件的type就是一个函数，返回结果是VNode
+  let renderVNode = type(props); // 函数式组件转化成VNode后的type就是一个函数，返回结果是VNode
   if (!renderVNode) return null;
   return createDOM(renderVNode);
 }

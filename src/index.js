@@ -14,17 +14,29 @@ import ReactDOM from "./react-dom";
 //   document.getElementById("root")
 // );
 
-function MyFunctionComponent(props) {
-  return (
-    <div className="test-class" style={{ color: "red" }}>
-      Simple React App
-      <span>{props.xx}</span>
-      <span>xx2</span>
-    </div>
-  );
+// function MyFunctionComponent(props) {
+//   return (
+//     <div className="test-class" style={{ color: "red" }}>
+//       Simple React App
+//       <span>{props.xx}</span>
+//       <span>xx2</span>
+//     </div>
+//   );
+// }
+
+class MyClassComponent extends React.Component {
+  render() {
+    return (
+      <div className="test-class" style={{ color: "red" }}>
+        Simple React App
+        <span>{this.props.xx}</span>
+        <span>xx2</span>
+      </div>
+    );
+  }
 }
 
 ReactDOM.render(
-  <MyFunctionComponent xx="xx1" />,
+  <MyClassComponent xx="child1" />,
   document.getElementById("root")
 );
